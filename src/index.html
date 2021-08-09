@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>File Integrity</title>
+</head>
+<body>
+    <h2>Register File</h2>
+
+    <form name="registerForm">
+      <label for="file">File:</label><br>
+      <input type="file" name="file" ><br>
+      <label for="address">Address:</label><br>
+      <input type="text" name="address" ><br><br>
+    </form> 
+    <button onclick="registerFile()">Register</button>
+    <div id="registerMessage"></div>
+
+    <h2>Validate File</h2>
+
+    <form name="validateForm">
+      <label for="file">File:</label><br>
+      <input type="file" name="file" ><br>
+      <label for="address">Address:</label><br>
+      <input type="text" name="address" ><br><br>
+    </form> 
+    <button onclick="validateFile()">Validate</button>
+
+    <div id="validateMessage"></div>
+
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.36/dist/web3.min.js" integrity="sha256-nWBTbvxhJgjslRyuAKJHK+XcZPlCnmIAAMixz6EefVk=" crossorigin="anonymous"></script>
+  <script language="javascript" type="text/javascript" src="./abi.js"></script>
+
+  <script>
+    const contractAddress = "0xe679dc0f7174F8e785638a3fD6b5CB612D632fdA";
+    var contract;
+    var reader = new FileReader();
+    var file;
+    var address;
+    var registerFile;
+    var validateFile;
+    const showLoading = (divID) => {
+      var elm = document.getElementById(divID);
+      elm.innerHTML = 'Please Wait';
+    };
+    const hideLoading = (divID) => {
+      var elm = document.getElementById(divID);
+      elm.innerHTML = '';
+    };
+
+    window.addEventListener('load', async () => {
+      // Modern dapp browsers...
+      if (window.ethereum) {
+        window.web3 = new Web3(ethereum);
+        contract = new web3.eth.Contract(abi, contractAddress);
+        // Request account access if needed
+        await ethereum.enable();
+              
+        registerFile = () => {
+          address = document.forms["registerForm"]["address"].value;
+          reader.onloadend = async () => {
+            file = reader.result;
+            try{
+                const result = await contract.methods.registerFile(file,address).send({from:'0x630e8ee01f4361629bC59Dc2eDC4c47698CF19ba'});
+                if(result.status == true){
+                  alert("file added successfully");
+                }else{
+                  alert("file could not be added");
+                }
+                hideLoading('registerMessage');
+            }catch(e){
+              alert(e);
+            }
+          };
+          showLoading('registerMessage');
+          reader.readAsText(document.forms["registerForm"]["file"].files[0]);
+        }
+
+        validateFile = () => {
+          address = document.forms["validateForm"]["address"].value;
+          reader.onloadend = async () => {
+            file = reader.result;
+            try{
+                const found = await contract.methods.validateFile(file,address).call();
+                if(found == true){
+                  alert("file is valid");
+                }else{
+                  alert("file is invalid");
+                }
+                hideLoading('validateMessage');
+            }catch(e){
+              alert(e);
+            }
+          };
+          showLoading('validateMessage');
+          reader.readAsText(document.forms["validateForm"]["file"].files[0]);
+        }
+      }else {
+          alert('Non-Ethereum browser detected. You should consider trying MetaMask!');
+      }
+    });
+</script>
+</body>
+</html>
